@@ -2,25 +2,33 @@ extern crate sudokusolver;
 
 use sudokusolver::Graph;
 use sudokusolver::CellCoord;
-use std::collections::LinkedList;
+use std::collections::VecDeque;
 use std::io::stdin;
 fn main() {
 
-    let graph = read_console();
+    let graph = read_test();
     graph.pretty_print();
 
-    let sol = sudokusolver::z3s::start(graph);
-    sol.pretty_print();
-    
-    /*if let Some(result) = algorithm(&graph) {
-        result.pretty_print();
-    } else {
-        panic!("no found!");
-    }*/
+    match solve_z3(graph) {
+        Some(solution) => solution.pretty_print(),
+        None => println!("No solution found")
+    }
 }
 
+fn solve_z3(graph: Graph) -> Option<Graph> {
+    sudokusolver::z3s::start(graph)
+}
+
+fn solve_tree_search(graph: Graph) -> Option<Graph> {
+    algorithm(&graph)
+}
+
+fn read_test() -> Graph {
+    let lines = include_str!("../test.txt").lines().map(|x| String::from(x)).collect();
+    parse_graph_strings(lines)
+}
 fn read_console() -> Graph {
-    /*println!("Please fill in 9 lines of 9 characters each");
+    println!("Please fill in 9 lines of 9 characters each");
     println!("Or fill in 0 if empty");
     
     let mut input = vec![];
@@ -34,11 +42,9 @@ fn read_console() -> Graph {
         stdin().read_line(&mut s).expect("Dit not enter a correct string");
         input.push(s);      
 
-    }*/
+    }
 
-    let lines = include_str!("../test.txt").lines().map(|x| String::from(x)).collect();
-
-    parse_graph_strings(lines)
+    parse_graph_strings(input)
 }
 
 fn parse_graph_strings(lines: Vec<String>) -> Graph {
@@ -66,61 +72,60 @@ fn parse_graph_strings(lines: Vec<String>) -> Graph {
 // -3. Check if there are neighbours
 // -4. Search neighbour of i with fewest possible values and no assignment
 //      a. If all neighbours have a vallue assigned. Find some other node and continue to 1
-// fn algorithm(gg: &Graph) -> Option<Graph> {
 
-//     let mut stack: LinkedList<(String, Graph)> = LinkedList::new();
-//     stack.push_front(("root".to_string(), gg.clone()));
+fn algorithm(gg: &Graph) -> Option<Graph> {
 
-//     while !stack.is_empty() {
-//         if let Some((_tag, mut graph)) = stack.pop_front() {
-//             /*println!("pop: {}", tag);
-//             graph.pretty_print();*/
+    let mut stack: VecDeque<(String, Graph)> = VecDeque::new();
+    stack.push_front(("root".to_string(), gg.clone()));
 
-//             let mut changed = true;
-//             while changed {
-//                 changed = false;        
-//                 for i in 0..9 {
-//                     for j in 0..9 {             
-//                         let coords = CellCoord::new(i, j);
-//                         if let Some(values) = graph.get_cell(&coords).get_possible_values(&graph) {
-//                             if values.len() == 1 {
-//                                 graph.get_cell_mutable(&coords).set_value(values[0]);                        
-//                                 changed = true;
-//                             }
-//                         }
-//                     }
-//                 }
-//             }
+    while !stack.is_empty() {
+        if let Some((_tag, mut graph)) = stack.pop_front() {            
+            
+            // For every cell that has only one value possible, fill it            
+            let mut changed = true;
+            while changed {
+                changed = false;
+                for i in 0..9 {
+                    for j in 0..9 {
+                        let coords = CellCoord::new(i, j);
+                        if let Some(values) = graph.get_cell(&coords).get_possible_values(&graph) {
+                            if values.len() == 1 {
+                                graph.get_cell_mutable(&coords).set_value(values[0]);                        
+                                changed = true;
+                            }
+                        }
+                    }
+                }
+            }
 
             
-//             if graph.is_filled() {
-//                 return Some(graph);
-//             }
+            if graph.is_filled() {
+                return Some(graph);
+            }
 
-//             let mut smallest = (10, None);
-//             for i in 0..9 {
-//                 for j in 0..9 {         
-//                     let cell = &graph.get_cell(&CellCoord::new(i, j));
-//                     if let Some(values) = cell.get_possible_values(&graph) {
-//                         if values.len() <= smallest.0 && values.len() >= 1 {
-//                             smallest = (values.len(), Some((i, j)));                    
-//                         }
-//                     }
-//                 }
-//             }
+            let mut smallest = (10, None);
+            for i in 0..9 {
+                for j in 0..9 {         
+                    let cell = &graph.get_cell(&CellCoord::new(i, j));
+                    if let Some(values) = cell.get_possible_values(&graph) {
+                        if values.len() <= smallest.0 && values.len() >= 1 {
+                            smallest = (values.len(), Some((i, j)));                    
+                        }
+                    }
+                }
+            }
 
-//             if let Some((x, y)) = smallest.1 {
-//                 let coords = CellCoord::new(x, y);
-//                 if let Some(values) = graph.get_cell(&coords).get_possible_values(&graph){
-//                     for c in values {
-//                         let mut cl = graph.clone();
-//                         //println!("({}, {}) -> {}", x, y, c);
-//                         cl.get_cell_mutable(&coords).set_value(c);
-//                         stack.push_front((format!("({}, {}) -> {}", x, y, c), cl));
-//                     }            
-//                 }
-//             }
-//         }
-//     }
-//     None
-// }
+            if let Some((x, y)) = smallest.1 {
+                let coords = CellCoord::new(x, y);
+                if let Some(values) = graph.get_cell(&coords).get_possible_values(&graph){
+                    for c in values {
+                        let mut cl = graph.clone();
+                        cl.get_cell_mutable(&coords).set_value(c);
+                        stack.push_front((format!("({}, {}) -> {}", x, y, c), cl));
+                    }            
+                }
+            }
+        }
+    }
+    None
+}

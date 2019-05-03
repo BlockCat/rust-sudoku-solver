@@ -13,7 +13,7 @@ impl CellCoord {
 
 #[derive(Debug, Clone)]
 pub struct Graph {    
-    cells: [[Cell; 9]; 9]    
+    pub cells: [[Cell; 9]; 9]
 }
 
 #[derive(Debug, Default, Clone)]

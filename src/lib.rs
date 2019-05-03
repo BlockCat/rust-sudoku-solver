@@ -1,4 +1,7 @@
 #![feature(vec_remove_item)]
+extern crate z3;
+
+pub mod z3s;
 
 #[derive(Debug, Default, Clone)]
 pub struct CellCoord { x: u8, y: u8 }
@@ -108,7 +111,7 @@ impl Cell {
     pub fn get_possible_values(&self, graph: &Graph) -> Option<Vec<u8>> {
         if let None = self.get_value() {
             let neighbours = &self.neighbours;
-            let mut values = vec![1u8, 2, 3, 4, 5, 6, 7, 8, 9];        
+            let mut values = vec![1u8, 2, 3, 4, 5, 6, 7, 8, 9];
 
             for n in neighbours {
                 let c = graph.get_cell(n);

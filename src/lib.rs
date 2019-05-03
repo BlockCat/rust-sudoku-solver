@@ -1,7 +1,11 @@
 #![feature(vec_remove_item)]
+
+#[cfg(feature="z3s")]
 extern crate z3;
 
+#[cfg(feature="z3s")]
 pub mod z3s;
+
 
 #[derive(Debug, Default, Clone)]
 pub struct CellCoord { x: u8, y: u8 }

@@ -5,4 +5,8 @@ authors = ["BlockCat <zinoonomiwo@gmail.com>"]
 
 [dependencies]
 stacker = "0.1.5"
-z3 = "0.3.2"
+z3 = { version = "0.3.2", optional = true }
+
+[features]
+default = []
+z3s = ["z3"]

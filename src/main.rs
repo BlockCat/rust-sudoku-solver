@@ -9,18 +9,20 @@ fn main() {
     let graph = read_test();
     graph.pretty_print();
 
-    match solve_z3(graph) {
-        Some(solution) => solution.pretty_print(),
-        None => println!("No solution found")
+    #[cfg(feature = "z3s")]
+    {
+        match sudokusolver::z3s::start(graph.clone()) {
+            Some(solution) => solution.pretty_print(),
+            None => println!("No solution found")
+        }
     }
-}
-
-fn solve_z3(graph: Graph) -> Option<Graph> {
-    sudokusolver::z3s::start(graph)
-}
-
-fn solve_tree_search(graph: Graph) -> Option<Graph> {
-    algorithm(&graph)
+    #[cfg(not(feature = "z3s"))]
+    {
+        match algorithm(&graph) {
+            Some(solution) => solution.pretty_print(),
+            None => println!("No solution found")
+        }
+    }
 }
 
 fn read_test() -> Graph {
